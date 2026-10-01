@@ -12,7 +12,11 @@
             scripts[url] = new Promise(function (resolve, reject) {
                 const s = document.createElement('script');
                 s.src = url + '?v=' + Date.now(); // sin caché: vemos cada "despliegue" al recargar
-                s.onload = resolve;
+                const t0 = performance.now();
+                s.onload = function () {
+                    console.log('[contenedor] ' + url + ' cargado en ' + (performance.now() - t0).toFixed(0) + ' ms');
+                    resolve();
+                };
                 s.onerror = function () {
                     delete scripts[url];
                     reject(new Error('No se pudo cargar ' + url));
@@ -62,8 +66,10 @@
             montar(entrada);
         } catch (e) {
             if (miTurno !== turno) return;
-            raiz.innerHTML = '<p class="app-error">El micro frontend <b>' + entrada.nombre +
-                '</b> no está disponible en este momento. El resto de la aplicación sigue funcionando.</p>';
+            raiz.innerHTML = '<div class="app-error">El micro frontend <b>' + entrada.nombre +
+                '</b> no está disponible en este momento. El resto de la aplicación sigue funcionando.<br>' +
+                '<button class="app-reintentar">Reintentar</button></div>';
+            raiz.querySelector('.app-reintentar').addEventListener('click', navegar);
             console.error(e);
         }
     }

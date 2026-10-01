@@ -106,3 +106,13 @@ body {
     font-size: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
 }
+
+.app-reintentar {
+    margin-top: 10px;
+    background: #a12a1e;
+    color: #fff;
+    border: 0;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+}
