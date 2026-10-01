@@ -3,7 +3,7 @@
 // Escucha:  'carrito:agregar'      { id, nombre, precio }
 // Publica:  'carrito:actualizado'  { cantidad, total }
 (function () {
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
     const pesos = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
     const CSS = `
@@ -83,8 +83,16 @@
             publicarEstado();
             pintar();
         } else if (e.target.matches('.car-confirmar')) {
-            mensaje = 'Pedido confirmado por ' + pesos.format(total()) + '. ¡Gracias!';
+            // El pedido se arma ANTES de vaciar el carrito
+            const pedido = {
+                version: 1,
+                id: 'P' + Date.now(),
+                items: items.map(it => ({ nombre: it.nombre, cantidad: it.cantidad, precio: it.precio })),
+                total: total()
+            };
+            mensaje = 'Pedido confirmado por ' + pesos.format(pedido.total) + '. ¡Gracias!';
             items.length = 0;
+            window.dispatchEvent(new CustomEvent('pedido:confirmado', { detail: pedido }));
             publicarEstado();
             pintar();
         }
