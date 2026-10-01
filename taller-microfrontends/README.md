@@ -4,36 +4,31 @@ Tienda de comida típica construida con micro frontends para la Actividad 2 de A
 
 Un contenedor carga en tiempo de ejecución cuatro micro frontends, cada uno servido desde su propio puerto y actualizable por separado. Se parte del taller SaborUPC y se agrega un micro frontend nuevo, **Seguimiento de pedidos**, hecho con Vue 3 desde CDN y sin paso de compilación.
 
-**Autor:** Hernán Gutierrez (equipo de 1 integrante, por lo que asume los tres roles: Plataforma, Pedidos y Descubrimiento).
+**Autor:** Hernán (equipo de 1 integrante, por lo que asume los tres roles: Plataforma, Pedidos y Descubrimiento).
 
 ## Arquitectura
 
+**Carga:** el contenedor descarga cada micro frontend como un script desde su propio servidor, según la ruta.
+
 ```mermaid
 flowchart TB
-    U[Navegador del usuario<br/>localhost:8080]
-    subgraph C[Contenedor :8080]
-        R[Enrutamiento por hash<br/>registro.js]
-        N[Contador · Saludo · Notificaciones]
-    end
-    CAT[mfe-catalogo :8081<br/>JS puro]
-    CAR[mfe-carrito :8082<br/>JS puro]
-    PER[mfe-perfil :8083<br/>Web Component]
-    SEG[mfe-seguimiento :8084<br/>Vue 3 por CDN]
-
-    U --> C
-    C -- script en tiempo de ejecución --> CAT
-    C -- script en tiempo de ejecución --> CAR
-    C -- script en tiempo de ejecución --> PER
-    C -- script en tiempo de ejecución --> SEG
-
-    CAT -. carrito:agregar .-> CAR
-    CAR -. carrito:actualizado .-> N
-    PER -. usuario:cambio .-> N
-    CAR -. pedido:confirmado .-> SEG
-    SEG -. pedido:estado .-> N
+    U["Navegador del usuario"] --> C["Contenedor :8080"]
+    C -->|"#/catalogo"| CAT["mfe-catalogo :8081<br/>JS puro"]
+    C -->|"#/carrito"| CAR["mfe-carrito :8082<br/>JS puro"]
+    C -->|"#/perfil"| PER["mfe-perfil :8083<br/>Web Component"]
+    C -->|"#/pedidos"| SEG["mfe-seguimiento :8084<br/>Vue 3 por CDN"]
 ```
 
-Las líneas punteadas son eventos publicados en `window`. Los micro frontends nunca se importan entre sí: quien publica no sabe quién escucha.
+**Comunicación:** los micro frontends nunca se importan entre sí. Solo publican eventos en `window`, y quien publica no sabe quién escucha.
+
+```mermaid
+flowchart LR
+    CAT["mfe-catalogo"] -->|"carrito:agregar"| CAR["mfe-carrito"]
+    CAR -->|"pedido:confirmado"| SEG["mfe-seguimiento"]
+    CAR -->|"carrito:actualizado"| C["Contenedor"]
+    PER["mfe-perfil"] -->|"usuario:cambio"| C
+    SEG -->|"pedido:estado"| C
+```
 
 ## Puertos y URL
 
