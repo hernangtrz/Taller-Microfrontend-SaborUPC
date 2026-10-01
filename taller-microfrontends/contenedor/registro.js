@@ -18,5 +18,11 @@ window.REGISTRO_MFE = {
         url: 'http://localhost:8083/perfil.js',
         tipo: 'webcomponent',      // define la etiqueta <mfe-perfil>
         etiqueta: 'mfe-perfil'
+    },
+    '/pedidos': {
+        nombre: 'Seguimiento',
+        url: 'http://localhost:8084/seguimiento.js',
+        tipo: 'funcion',
+        precargar: true            // debe escuchar pedido:confirmado aunque no esté en pantalla
     }
 };

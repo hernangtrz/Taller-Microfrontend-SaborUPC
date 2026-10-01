@@ -87,3 +87,22 @@ body {
     color: #777;
     padding: 16px;
 }
+
+.app-avisos {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+}
+
+.app-toast {
+    background: #222;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+}

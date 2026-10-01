@@ -81,6 +81,13 @@
     window.addEventListener('usuario:cambio', function (e) {
         document.getElementById('app-saludo').textContent = 'Hola, ' + e.detail.nombre;
     });
+    window.addEventListener('pedido:estado', function (e) {
+        const aviso = document.createElement('div');
+        aviso.className = 'app-toast';
+        aviso.textContent = 'Pedido ' + e.detail.id + ': ' + e.detail.estado;
+        document.getElementById('app-avisos').appendChild(aviso);
+        setTimeout(function () { aviso.remove(); }, 3500);
+    });
 
     // 5. Arranque: precargar los micro frontends que lo requieran y navegar
     Object.values(window.REGISTRO_MFE)
