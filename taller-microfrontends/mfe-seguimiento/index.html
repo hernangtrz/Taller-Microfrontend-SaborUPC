@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>mfe-seguimiento (modo independiente)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 24px;
+            background: #fafafa;
+        }
+
+        .banda {
+            background: #fff3c4;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="banda">
+        Modo independiente: simulamos el evento del carrito.
+        <button onclick="simular()">Simular pedido confirmado</button>
+    </div>
+    <div id="raiz-local"></div>
+    <h3>Eventos publicados</h3>
+    <ul id="eventos"></ul>
+
+    <script src="seguimiento.js"></script>
+    <script>
+        let n = 0;
+        function simular() {
+            n++;
+            window.dispatchEvent(new CustomEvent('pedido:confirmado', {
+                detail: {
+                    version: 1, id: 'P-prueba-' + n,
+                    items: [{ nombre: 'Arepa de huevo', cantidad: 2, precio: 6000 }],
+                    total: 12000
+                }
+            }));
+        }
+        window.addEventListener('pedido:estado', function (e) {
+            const li = document.createElement('li');
+            li.textContent = 'pedido:estado → ' + JSON.stringify(e.detail);
+            document.getElementById('eventos').appendChild(li);
+        });
+        window.renderSeguimiento('raiz-local');
+    </script>
+</body>
+
+</html>
