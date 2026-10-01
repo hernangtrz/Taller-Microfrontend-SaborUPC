@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba de contrato · mfe-seguimiento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 24px;
+            background: #fafafa;
+        }
+
+        .ok {
+            color: #1b7a3e;
+        }
+
+        .fallo {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        li {
+            margin: 6px 0;
+        }
+
+        #resumen {
+            margin-top: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Prueba de contrato: mfe-seguimiento</h2>
+    <ul id="resultados"></ul>
+    <p id="resumen">Ejecutando…</p>
+    <!-- Zona donde se monta el MFE durante la prueba -->
+    <div id="raiz-prueba" style="display:none"></div>
+
+    <script src="seguimiento.js"></script>
+    <script>
+        const lista = document.getElementById('resultados');
+        let fallos = 0;
+
+        function verificar(condicion, descripcion) {
+            console.assert(condicion, descripcion);
+            if (!condicion) fallos++;
+            const li = document.createElement('li');
+            li.className = condicion ? 'ok' : 'fallo';
+            li.textContent = (condicion ? '✓ ' : '✗ ') + descripcion;
+            lista.appendChild(li);
+        }
+
+        const espera = ms => new Promise(r => setTimeout(r, ms));
+
+        // Espera un evento de window o devuelve null si pasa el tiempo límite
+        function esperarEvento(nombre, limite) {
+            return new Promise(function (resolve) {
+                const t = setTimeout(function () { window.removeEventListener(nombre, f); resolve(null); }, limite);
+                function f(e) { clearTimeout(t); window.removeEventListener(nombre, f); resolve(e.detail); }
+                window.addEventListener(nombre, f);
+            });
+        }
+
+        (async function () {
+            const raiz = document.getElementById('raiz-prueba');
+
+            // 1. Funciones del contrato expuestas
+            verificar(typeof window.renderSeguimiento === 'function', 'Expone window.renderSeguimiento');
+            verificar(typeof window.unmountSeguimiento === 'function', 'Expone window.unmountSeguimiento');
+
+            // 2. El montaje genera contenido
+            await window.renderSeguimiento('raiz-prueba');
+            verificar(!!raiz.querySelector('.seg-titulo'), 'Al montar, se renderiza el título del micro frontend');
+            verificar(raiz.querySelector('.seg-vacio') !== null, 'Sin pedidos, muestra el mensaje de lista vacía');
+
+            // 3. Consume pedido:confirmado (contrato de entrada)
+            const esperaEstado = esperarEvento('pedido:estado', 7000);
+            const pedidoPrueba = {
+                version: 1, id: 'P-contrato-1',
+                items: [{ nombre: 'Plato de prueba', cantidad: 1, precio: 1000 }],
+                total: 1000
+            };
+            window.dispatchEvent(new CustomEvent('pedido:confirmado', { detail: pedidoPrueba }));
+            await espera(150);   // Vue actualiza el DOM en el siguiente ciclo
+            verificar(raiz.textContent.includes('P-contrato-1'), 'Al recibir pedido:confirmado, el pedido aparece en pantalla');
+
+            // 4. Publica pedido:estado (contrato de salida)
+            const d = await esperaEstado;
+            verificar(d !== null, 'Publica pedido:estado dentro de 7 s');
+            if (d) {
+                verificar(typeof d.version === 'number', 'pedido:estado.detail.version es número');
+                verificar(d.id === 'P-contrato-1', 'pedido:estado.detail.id coincide con el pedido');
+                verificar(['Recibido', 'En preparación', 'En camino', 'Entregado'].includes(d.estado),
+                    'pedido:estado.detail.estado es uno de los 4 estados acordados (' + d.estado + ')');
+            }
+
+            // 5. Desmontaje limpio
+            window.unmountSeguimiento('raiz-prueba');
+            verificar(raiz.innerHTML === '', 'Al desmontar, el contenedor queda vacío');
+
+            document.getElementById('resumen').textContent =
+                fallos === 0 ? '✓ Todas las pruebas pasaron' : '✗ Fallaron ' + fallos + ' prueba(s)';
+            document.getElementById('resumen').className = fallos === 0 ? 'ok' : 'fallo';
+        })();
+    </script>
+</body>
+
+</html>
